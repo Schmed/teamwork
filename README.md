@@ -23,7 +23,7 @@ and then validated and augmented by the onFormSubmit() function.
 There are currently 10 columns:
 * _Timestamp_ - of the form submission
 * _Email_ - address uniquely identifying the player, to which the confirmation/failure email is sent
-* _Playe_r first name - who performed the Teamwork
+* _Player first name_ - who performed the Teamwork
 * _Player last name_ - who performed the Teamwork
 * _Date performed_ - of the Teamwork
 * _Duraction Activity Category_ - if Teamwork is measured in 15-minute increments,
