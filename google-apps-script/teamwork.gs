@@ -19,13 +19,6 @@
  *
  * See:  https://developers.google.com/apps-script/quickstart/forms
  *
- * TODO Add a row to the Activity Categories sheet containing the
- *      successful submission image URL for the confirmation email.
- *
- * TODO It would be cool to set Date Performed value to the current date
- *      when the form instance is created, but that's only possible by
- *      embedding today's date in the pre-filled version of the form URL.
- *
  * TODO Other administrative features?
  */
 
@@ -805,4 +798,3 @@ function updateActivityCategories() {
   
   Logger.log('Teamwork Activity Categories update was successful.');
 }
-  
