@@ -5,6 +5,16 @@ and a Google spreadsheet.  Players on an (Ultimate) team use the form to record
 working individually or in small groups developing skills, and interacting with
 and supporting other team members socially.
 
+We developed this system to support our high school Ultimate team,
+Air Traffic Control in 2020, partly to address the fact that in-person practices
+posed too great a risk for COVID-19 transmission.  However, we hope it has
+great potential as a permanent part of our program, to help us address some of 
+our team goals that have so far proved fairly elusive.
+
+It's based on an idea our former captain, Jenna Krugler, brought to us from
+her college Ultimate team, the UC Berkeley Pie Queens.  They use a similar
+system called "Workout Wars", employing a custom web development stack. 
+
 # Record Teamwork form
 Our team has a Google form players use to record Teamwork.  A form submission 
 automatically adds a row to the Teamwork sheet.  Afterward, the onFormSubmit()
