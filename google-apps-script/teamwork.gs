@@ -354,6 +354,12 @@ function testActivityChoiceParsing() {
     return false;
   }
       
+  if (!checkActivityChoiceParsing('Playing video games',
+                                  '1 pts./3 hr.',
+                                  'Playing video games [1 pts./3 hr.] Mindlessly gazing into your phone forever')) {
+    return false;
+  }
+      
   if (!checkActivityChoiceParsing('Sharing media',
                                   '3 pts.',
                                   'Sharing media [3 pts.] Blah blah blah')) {
@@ -424,6 +430,14 @@ function testGetAwardedPoints() {
   }
       
   if (!checkAwardedPoints(160, '10 pts./15 min.', '4 hours or more (aka "give it a rest, maybe?")')) {
+    return false;
+  }
+      
+  if (!checkAwardedPoints(160, '40 pts./1 hr.', '4 hours or more (aka "give it a rest, maybe?")')) {
+    return false;
+  }
+      
+  if (!checkAwardedPoints(20, '40 pts./1 hr.', '30 minutes')) {
     return false;
   }
       
@@ -776,8 +790,10 @@ function updateActivityCategories() {
                                             categoryPointsPerUnit),
                              otherCategoryMcItem ? ' ' + categoryNotes : '');
     if (categoryUnit.match(DURATION_PATTERN)) {
+      Logger.log('Adding duration category option: ' + categoryOption);
       durationCategoryOptions.push(categoryOption);
     } else {
+      Logger.log('Adding other category option: ' + categoryOption);
       otherCategoryOptions.push(categoryOption);
     }
   }
@@ -798,3 +814,4 @@ function updateActivityCategories() {
   
   Logger.log('Teamwork Activity Categories update was successful.');
 }
+  
