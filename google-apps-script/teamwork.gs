@@ -86,7 +86,6 @@ function test() {
   Logger.log('LAST_NAME_ITEM_ID: ' + LAST_NAME_ITEM_ID);
   Logger.log('DATE_PERFORMED_ITEM_ID: ' + DATE_PERFORMED_ITEM_ID);
   Logger.log('DESCRIPTION_ITEM_ID: ' + DESCRIPTION_ITEM_ID);
-  Logger.log('HIDDEN_CONSTANT: ' + HIDDEN_CONSTANT);
     
   Logger.log('Running teamwork.gs unit tests...');
   var isAllTestsPassed = true;
@@ -195,7 +194,7 @@ function onFormSubmit(e) {
   var pointsAwarded = 0;
   var categoryChoice = durationCategoryChoice ? durationCategoryChoice : otherCategoryChoice;
   if (categoryChoice) {
-    var activityChoiceFormPattern = /^([^-]+) \[([^\]]+)\](?: .+)?$/;
+    var activityChoiceFormPattern = /^([^[]+) \[([^\]]+)\](?: .+)?$/;
     var fields = activityChoiceFormPattern.exec(categoryChoice);
     if ((!fields) || (fields.length != 3)) {
       error += '\nInternal error! Could not match category choice pattern to: ' + categoryChoice;
@@ -366,6 +365,12 @@ function testActivityChoiceParsing() {
     return false;
   }
       
+  if (!checkActivityChoiceParsing('Daily team check-in',
+                                  '1 pts.',
+                                  'Daily team check-in [1 pts.] Blah blah blah')) {
+    return false;
+  }
+      
   Logger.log('Test passed.');
   return true;
 }
@@ -381,7 +386,7 @@ function testActivityChoiceParsing() {
 function checkActivityChoiceParsing(expectedCategoryName,
                                     expectedPointValue,
                                     formValue) {
-  var activityChoiceFormPattern = /^([^-]+) \[([^\]]+)\](?: .+)?$/;
+  var activityChoiceFormPattern = /^([^[]+) \[([^\]]+)\](?: .+)?$/;
   var fields = activityChoiceFormPattern.exec(formValue);
   if ((!fields) || (fields.length != 3)) {
     Logger.log('Could not match pattern to: ' + formValue);
