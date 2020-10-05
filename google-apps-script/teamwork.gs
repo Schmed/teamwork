@@ -30,6 +30,7 @@ SUBMIT_FAILURE_IMAGE_URL = 'https://media.giphy.com/media/l41YsxKKVYnucStag/giph
 
 // 1-based spreadsheet Range coordinates for the cells we may need to modify
 // Note: when accessing values array, subtract one from each of the following.
+DATE_PERFORMED_COLUMN = 5;
 DURATION_CATEGORY_COLUMN = 6;
 DURATION_COLUMN = 7;
 OTHER_CATEGORY_COLUMN = 8;
@@ -216,9 +217,14 @@ function onFormSubmit(e) {
   }
 
   // Make sure the date is not in the future
+  // (and silently replace year "0020" with "2020").
   var today = new Date();
   var fields = datePerformed.split('/');
-  var performedDate = new Date(fields[2], fields[0] - 1, fields[1]);
+  var year = Number(fields[2]);
+  if (year < 100) {
+    year = year + 2000;
+  }
+  var performedDate = new Date(year, fields[0] - 1, fields[1]);
   if (performedDate.getTime() > today.getTime()) {
     error += '\nThe date you entered (' + datePerformed + ') is in the future.';
     error += '\nNo borrowing points against future Teamwork!';
@@ -244,6 +250,10 @@ function onFormSubmit(e) {
   //
   // TODO Move data to a separate sheet for errors?
   //
+  newTeamworkValues[0][DATE_PERFORMED_COLUMN-1] =
+        Utilities.formatDate(performedDate, 
+                             SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
+                             "MM/dd/yyyy");
   newTeamworkValues[0][DURATION_CATEGORY_COLUMN-1] = durationCategoryName;
   newTeamworkValues[0][DURATION_COLUMN-1] = durationChoice;
   newTeamworkValues[0][OTHER_CATEGORY_COLUMN-1] = otherCategoryName;
