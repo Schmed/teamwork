@@ -1,12 +1,20 @@
 /**
+ * test.gs
+ *
+ * Entry point for running all unit tests, plus code to log environment properties.
+ *
+ * See teamwork.gs for more information.
+ */
+
+/**
  * Run a few unit tests on some of the functions herein.
  
  * Note: Execute this by selecting the Run>Run Function>test menu item
  *       above within this Google Apps Script editor UI.
- * Note: This doesn't run testSendEmail, so you must run that separately.
+ * Note: This runs neither testSendEmail nor testSendPlayerSummary, 
+ *       so you must run those separately.
  */
 function test() {
-  
   Logger.log('Checking that all required constants are defined...');
 
   Logger.log('RECORD_TEAMWORK_FORM_BASE_URL: ' + RECORD_TEAMWORK_FORM_BASE_URL);

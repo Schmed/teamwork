@@ -1,4 +1,12 @@
 /**
+ * reports.gs
+ *
+ * Utilities for sending periodic Teamwork summaries to players.
+ *
+ * See teamwork.gs for more information.
+ */
+
+/**
  * Unit test for sendPlayerSummary()
  *
  * Note: This sends an email, but doesn't itself validate the content
@@ -198,18 +206,31 @@ function testMakePlayerSummary() {
   return true;  
 }
   
+/**
+ * Assert that makePlayerSummary() has summarized the Teamwork
+ * for a given category correctly.
+ *
+ * @param {Number[]} expectedPoints for each activity in category
+ * @param {Object[String][][]} periodCategories returned by
+ *        makePlayerSummary 
+ * @param {String} activityCategory of periodCategories to validate
+ * @param {Date}   firstDate of target period summarized
+ * @param {Date}   deadline for target period summarized
+ *                 (i.e., it must occur *before* this Date)
+ */
 function checkTeamwork(expectedPoints, periodCategories, activityCategory, firstDate, deadline) {
   var teamwork = periodCategories[activityCategory];
   var lastDate = deadline;
   lastDate.setDate(deadline.getDate()-1);
-  var description = Utilities.formatString('%s activities over period from %s through %s',
-                                           activityCategory,
-                                           Utilities.formatDate(firstDate, 
-                                                                SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                                'yyyy-MM-dd'),
-                                           Utilities.formatDate(lastDate, 
-                                                                SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                                'yyyy-MM-dd'));
+  var description = 
+    Utilities.formatString('%s activities over period from %s through %s',
+                           activityCategory,
+                           Utilities.formatDate(firstDate, 
+                                                SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
+                                                'yyyy-MM-dd'),
+                           Utilities.formatDate(lastDate, 
+                                                SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
+                                                'yyyy-MM-dd'));
   if (expectedPoints.length != teamwork.length) {
     Logger.log(Utilities.formatString('Wrong number of %s, expected %d, but got %d',
                                       description,

@@ -68,3 +68,12 @@ This function (invoked manually) forces any updates that have been made
 to the Activity Categories sheet since its previous invocation
 to be reflected in the options presented to any player who subsequently 
 fills out an instance of the form.
+
+# Source files
+The following Google Apps Script files comprise the project.
+(**Note:** Google Apps Script is just JavaScript with many pre-loaded Google modules.)
+* **teamwork.gs** - Main program entry point, an onFormSubmit(e) Trigger target.
+* **update_categories.gs** - Administrative function that updates the activity category options 
+in the Record Teamwork form.
+* **reports.gs** - Utilities for sending periodic Teamwork summaries to players.
+* **test.gs** - Entry point for running all unit tests, plus code to log environment properties.

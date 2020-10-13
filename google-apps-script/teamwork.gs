@@ -4,7 +4,7 @@
  * This script manages the interaction between the Record Teamwork form
  * and the ATC Teamwork DB spreadsheet.  In particular:
  *
- * onFormSubmit():
+ * onFormSubmit(e):
  * A form submission automatically adds a row to the Teamwork sheet,
  * but the data is validated & normalized (somewhat).  A confirmation
  * or error email is also sent to the player.
@@ -82,6 +82,7 @@ DESCRIPTION_ITEM_ID = 'Your form item ID goes here';
 /**
  * Validate the row of values just added to the Teamwork spreadsheet by
  * a Record Teamwork form submission.
+ * @param {Event} e associated with the form submission
  *
  * Note: This is the main entry point to this script, the target of
  *       an SpreadsheetTriggerBuilder.onFormSubmit() Trigger 

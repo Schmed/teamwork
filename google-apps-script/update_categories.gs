@@ -1,7 +1,15 @@
 /**
+ * update_categories.gs
+ *
+ * Administrative function that updates the activity category options in the Record Teamwork form.
+ *
+ * See teamwork.gs for more information.
+ */
+
+/**
  * Force any updates to the Activity Categories sheet to be
  * reflected in the options presented to any player who
- * subsequently fills out an instance of the form.
+ * subsequently fills out an instance of the Record Teamwork form.
  *
  * Note: Execute this periodically by selecting the 
  *       Run>Run Function>updateActivityCategories menu item
