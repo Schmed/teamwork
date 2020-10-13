@@ -4,6 +4,10 @@
  * Utilities for sending periodic Teamwork summaries to players.
  *
  * See teamwork.gs for more information.
+ *
+ * TODO Add a sendMonthlyPlayerSummaries() funciton that, for each player who submitted teamwork
+ *      during the month that just passed, summarizes that teamwork, comparing it to the teamwork
+ *      s/he submitted during the preceeding month (if any).
  */
 
 /**
