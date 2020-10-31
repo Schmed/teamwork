@@ -79,3 +79,5 @@ in the Record Teamwork form.
 * **test.gs** - Entry point for running all unit tests, plus code to log environment properties.
 * **form_access.gs** - A file **you** must add to attach the script to your spreadsheet & form.
 * **form_access_template.gs** - A template for your form_access.gs source file.
+* **leaderboard.gs** - A time-based (aka clock) Trigger target that updates the
+Google Charts embedded on the ATC Teamwork Leaderboard Google Presentation.
