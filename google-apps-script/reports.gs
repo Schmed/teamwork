@@ -4,11 +4,66 @@
  * Utilities for sending periodic Teamwork summaries to players.
  *
  * See teamwork.gs for more information.
- *
- * TODO Add a sendMonthlyPlayerSummaries() funciton that, for each player who submitted teamwork
- *      during the month that just passed, summarizes that teamwork, comparing it to the teamwork
- *      s/he submitted during the preceeding month (if any).
  */
+
+/**
+ * Send a PDF summarizing Teamwork submissions over the past month
+ * to each player who had any, comparing the totals to those of
+ * the previous month (if any).
+ */
+function sendMonthlyPlayerSummaries() {
+  
+  // Calculate DateRange of the month that just passed as well as the previous month
+  var now = new Date();
+  var targetDateRange = getPreviousMonthRange(now);
+  var otherDateRange = getPreviousMonthRange(targetDateRange.getFirstDate());
+  
+  // Get access to all range & values from the 'Points data' sheet
+  var ss = SpreadsheetApp.getActive();
+  var pointsDataSheet = ss.getSheetByName('Points data');
+  var numRows = pointsDataSheet.getDataRange().getNumRows(); // Includes title row
+  
+  // Build list of players who submitted Teamwork during most recent month,
+  // remembering those who also submitted Teamwork during the previous month.
+  var targetPlayerEmails = new Set();
+  var otherPlayerEmails = new Set();
+  for (var i = 2; i <= numRows; i++) {
+    var rowRange = pointsDataSheet.getRange(i, 1, 1, PD_CATEGORY_COLUMN);
+    var rowValues = rowRange.getValues()[0];
+    var datePeformed = rowValues[PD_DATE_PERFORMED_COLUMN-1];
+
+    if (   (datePeformed >= targetDateRange.getFirstDate())
+       &&  (datePeformed <= targetDateRange.getFinalDate())) {
+      var playerEmail = rowValues[PD_CANONICAL_EMAIL_COLUMN-1];
+      targetPlayerEmails.add(playerEmail);
+      if (   (datePeformed >= otherDateRange.getFirstDate())
+         &&  (datePeformed <= otherDateRange.getFinalDate())) {
+        otherPlayerEmails.add(playerEmail);
+      }
+    }
+  }
+  
+  /* Enable the following code to test just my own Teamwork summary email:
+  
+  targetPlayerEmails.clear();
+  otherPlayerEmails.clear();
+  targetPlayerEmails.add('schmed@transpac.com');
+  
+  */
+  
+  // Loop over player list, calling sendPlayerSummary for each player.
+  // If the player also submitted Teamwork during the previous month,
+  // then also pass the previous month's DateRange as the comparison month.
+  for (var playerEmail of targetPlayerEmails) {
+    if (otherPlayerEmails.has(playerEmail)) {
+      sendPlayerSummary(playerEmail, 
+                        targetDateRange,
+                        otherDateRange);
+    } else {
+      sendPlayerSummary(playerEmail, targetDateRange);
+    }
+  }
+}
 
 /**
  * Unit test for sendPlayerSummary()
@@ -19,15 +74,11 @@
  */
 function testSendPlayerSummary() {
   var playerEmailAddress = 'Schmed@TransPac.com';
-  var firstDate = new Date(2020,9,6); // 2020-10-06
-  var deadline = new Date(2020,9,12); // 2020-10-12 (on or before 2020-10-11)
-  var otherFirstDate = new Date(2020,9,1); // 2020-10-01
-  var otherDeadline = new Date(2020,9,6); // 2020-10-06 (on or before 2020-10-05)
+  var dateRange = new DateRange(parseDateString('2020-10-06'), 5);
+  var otherDateRange = new DateRange(parseDateString('2020-10-01'), 5);
   sendPlayerSummary(playerEmailAddress, 
-                    firstDate, 
-                    deadline,
-                    otherFirstDate,
-                    otherDeadline);
+                    dateRange,
+                    otherDateRange);
 }
 
 /**
@@ -36,62 +87,37 @@ function testSendPlayerSummary() {
  * time period.  Attach the PDF version of the Google Doc to
  * an email and send it to the player.
  *
- * @param {String} playerEmailAddress identifying target player
- * @param {Date}   firstDate of target period to summarize
- * @param {Date}   deadline for target period of summarized Teamwork
- *                 (i.e., it must occur *before* this Date)
- * @param {Date}   otherFirstDate of optional comparison period
- * @param {Date}   otherDeadline of optional comparison period
+ * @param {String}    playerEmailAddress identifying target player
+ * @param {DateRange} of target period to summarize
+ * @param {DateRange} of optional comparison period
  */
 function sendPlayerSummary(playerEmailAddress,
-                           firstDate,
-                           deadline,
-                           otherFirstDate,
-                           otherDeadline) {
+                           dateRange,
+                           otherDateRange) {
   
   // Collect the player's Teamwork over the target date range
   var periodCategories = makePlayerSummary(playerEmailAddress, 
-                                           firstDate, 
-                                           deadline);
+                                           dateRange);
   
   // If provided, collect the player's Teamwork over the optional
   // comparison period as well.
   var otherCategories = null;
-  if (!otherFirstDate) {
-    otherDeadline = null;
-  } else if (!otherDeadline) {
-    otherFirstDate = null;
-  } else {
+  if (otherDateRange) {
     otherCategories = makePlayerSummary(playerEmailAddress, 
-                                        otherFirstDate, 
-                                        otherDeadline);
+                                        otherDateRange);
   }
   
   // Build a Google Doc listing the Teamwork submissions
   // in each category, category point totals, and grand total.
   var playerName = Object.values(periodCategories)[0][0][PD_CANONICAL_PLAYER_NAME_COLUMN-1];
-  var lastDate = deadline;
-  lastDate.setDate(deadline.getDate()-1);
-  var title = Utilities.formatString('Teamwork summary for %s\n(%s through %s)',
+  var title = Utilities.formatString('Teamwork summary for %s\n(%s)',
                                      playerName,
-                                     Utilities.formatDate(firstDate, 
-                                                          SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                          'MM/dd'),
-                                     Utilities.formatDate(lastDate, 
-                                                          SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                          'MM/dd'));
+                                     dateRange);
   var doc = DocumentApp.create(title.replace(/\n/, ' '));
   if (otherCategories) {
-    var otherLastDate = otherDeadline;
-    otherLastDate.setDate(otherDeadline.getDate()-1);
-    title = Utilities.formatString('%s vs. %s through %s)',
+    title = Utilities.formatString('%s vs. %s)',
                                    title.replace(/\)/,''),
-                                   Utilities.formatDate(otherFirstDate, 
-                                                        SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                        'MM/dd'),
-                                   Utilities.formatDate(otherLastDate, 
-                                                        SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                        'MM/dd'));
+                                   otherDateRange);
   }
   var body = doc.getBody();
   body.appendParagraph(title)
@@ -173,7 +199,7 @@ function sendPlayerSummary(playerEmailAddress,
   MailApp.sendEmail({
     to: playerEmailAddress,
     subject: doc.getName(),
-    body: 'Thanks for all of your Teamwork!',
+    body: 'Thanks for all of your Teamwork!\n\n\n',
     attachments: doc.getAs(MimeType.PDF)
   });  
 }
@@ -185,24 +211,22 @@ function testMakePlayerSummary() {
   Logger.log('Testing makePlayerSummary...');
   
   var playerEmailAddress = 'Schmed@TransPac.com';
-  var firstDate = new Date(2020,9,1); // 2020-10-01
-  var deadline = new Date(2020,9,6); // 2020-10-06 (on or before 2020-10-05)
-  var periodCategories = makePlayerSummary(playerEmailAddress, firstDate, deadline);
+  var dateRange = new DateRange(parseDateString('2020-10-01'), 5);
+  var periodCategories = makePlayerSummary(playerEmailAddress, dateRange);
   
-  if (!checkTeamwork([30,30], periodCategories, 'Cardio work', firstDate, deadline)) {
+  if (!checkTeamwork([30,30], periodCategories, 'Cardio work', dateRange)) {
     return false;
   }
       
-  if (!checkTeamwork([6], periodCategories, 'Medium throws', firstDate, deadline)) {
+  if (!checkTeamwork([6], periodCategories, 'Medium throws', dateRange)) {
     return false;
   }
   
   // This validates the date sorting
   var playerEmailAddress = 'NellHolmesMiller@GMail.com';
-  var firstDate = new Date(2020,9,1); // 2020-10-01
-  var deadline = new Date(2020,9,4); // 2020-10-04 (on or before 2020-10-03)
-  periodCategories = makePlayerSummary(playerEmailAddress, firstDate, deadline);
-  if (!checkTeamwork([16,12], periodCategories, 'Strength training', firstDate, deadline)) {
+  var dateRange = new DateRange(parseDateString('2020-10-01'), 3);
+  periodCategories = makePlayerSummary(playerEmailAddress, dateRange);
+  if (!checkTeamwork([16,12], periodCategories, 'Strength training', dateRange)) {
     return false;
   }
       
@@ -218,23 +242,14 @@ function testMakePlayerSummary() {
  * @param {Object[String][][]} periodCategories returned by
  *        makePlayerSummary 
  * @param {String} activityCategory of periodCategories to validate
- * @param {Date}   firstDate of target period summarized
- * @param {Date}   deadline for target period summarized
- *                 (i.e., it must occur *before* this Date)
+ * @param {DateRange} of summarized target period
  */
-function checkTeamwork(expectedPoints, periodCategories, activityCategory, firstDate, deadline) {
+function checkTeamwork(expectedPoints, periodCategories, activityCategory, dateRange) {
   var teamwork = periodCategories[activityCategory];
-  var lastDate = deadline;
-  lastDate.setDate(deadline.getDate()-1);
   var description = 
-    Utilities.formatString('%s activities over period from %s through %s',
+    Utilities.formatString('%s activities over period %s',
                            activityCategory,
-                           Utilities.formatDate(firstDate, 
-                                                SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                'yyyy-MM-dd'),
-                           Utilities.formatDate(lastDate, 
-                                                SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                'yyyy-MM-dd'));
+                           dateRange);
   if (expectedPoints.length != teamwork.length) {
     Logger.log(Utilities.formatString('Wrong number of %s, expected %d, but got %d',
                                       description,
@@ -256,14 +271,12 @@ function checkTeamwork(expectedPoints, periodCategories, activityCategory, first
     }
     
     var performedDate = new Date(teamwork[i][PD_DATE_PERFORMED_COLUMN-1]);
-    if  (   (performedDate < firstDate)
-        ||  (performedDate > deadline)) {
+    if  (   (performedDate < dateRange.getFirstDate())
+        ||  (performedDate > dateRange.getFinalDate())) {
       Logger.log(Utilities.formatString('Element %d of %s was performed on %s',
                                         i,
                                         description,
-                                        Utilities.formatDate(performedDate, 
-                                                             SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                             'yyyy-MM-dd')));
+                                        makeDateString(performedDate)));
       return false;
     }
     if  (   (previousPerformedDate)
@@ -271,12 +284,8 @@ function checkTeamwork(expectedPoints, periodCategories, activityCategory, first
       Logger.log(Utilities.formatString('Element %d of %s was performed on %s (before previous element date: %s)',
                                         i,
                                         description,
-                                        Utilities.formatDate(performedDate, 
-                                                             SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                             'yyyy-MM-dd'),
-                                        Utilities.formatDate(previousPerformedDate, 
-                                                             SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
-                                                             'yyyy-MM-dd')));
+                                        makeDateString(performedDate),
+                                        makeDateString(previousPerformedDate)));
       return false;
     }
     previousPerformedDate = performedDate;
@@ -288,14 +297,11 @@ function checkTeamwork(expectedPoints, periodCategories, activityCategory, first
  * Summarize one player's Teamwork submissions over a specific
  * date range.
  *
- * @param {String} playerEmailAddress identifying target player
- * @param {Date}   firstDate of target period to summarize
- * @param {Date}   deadline for target period of summarized Teamwork
- *                 (i.e., it must occur *before* this Date)
+ * @param {String}    playerEmailAddress identifying target player
+ * @param {DateRange} of target period to summarize
  */
 function makePlayerSummary(playerEmailAddress,
-                           firstDate,
-                           deadline) {
+                           dateRange) {
   var canonicalEmailAddress = playerEmailAddress.toLowerCase();
 
   // Get access to all range & values from the 'Points data' sheet
@@ -318,9 +324,9 @@ function makePlayerSummary(playerEmailAddress,
       var category = rowValues[PD_CATEGORY_COLUMN-1];
       
       if (   (   rowValues[PD_DATE_PERFORMED_COLUMN-1]
-             >=  firstDate)
+             >=  dateRange.getFirstDate())
          &&  (   rowValues[PD_DATE_PERFORMED_COLUMN-1]
-             <   deadline)) {
+             <=  dateRange.getFinalDate())) {
         if (!(category in periodCategories)) {
           periodCategories[category] = new Array();
         }

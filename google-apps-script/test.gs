@@ -30,6 +30,11 @@ function test() {
   Logger.log('Running teamwork.gs unit tests...');
   var isAllTestsPassed = true;
   
+  isAllTestsPassed = isAllTestsPassed && testMakeDateString();
+  isAllTestsPassed = isAllTestsPassed && testParseDateString();
+  isAllTestsPassed = isAllTestsPassed && testDateRange_getFinalDate();
+  isAllTestsPassed = isAllTestsPassed && testDateRange_toString();
+  isAllTestsPassed = isAllTestsPassed && testGetPreviousMonthRange();
   isAllTestsPassed = isAllTestsPassed && testActivityChoiceParsing();
   isAllTestsPassed = isAllTestsPassed && testGetAwardedPoints();
   isAllTestsPassed = isAllTestsPassed && testMakePreFilledFormUrl();

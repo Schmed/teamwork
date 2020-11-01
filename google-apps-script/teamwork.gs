@@ -18,8 +18,6 @@
  * above within this Google Apps Script editor UI.)
  *
  * See:  https://developers.google.com/apps-script/quickstart/forms
- *
- * TODO Other administrative features?
  */
 
 // Image to embed in email indicating successful form submission

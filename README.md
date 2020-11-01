@@ -77,6 +77,7 @@ The following Google Apps Script files comprise the project.
 in the Record Teamwork form.
 * **reports.gs** - Utilities for sending periodic Teamwork summaries to players.
 * **test.gs** - Entry point for running all unit tests, plus code to log environment properties.
+* **dates.gs* - Utilities for manipulating Dates and DateRange objects.
 * **form_access.gs** - A file **you** must add to attach the script to your spreadsheet & form.
 * **form_access_template.gs** - A template for your form_access.gs source file.
 * **leaderboard.gs** - A time-based (aka clock) Trigger target that updates the
