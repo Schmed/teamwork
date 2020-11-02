@@ -6,11 +6,19 @@
  * See teamwork.gs for more information.
  */
 
+/**
+ * @param {Date} firstDate in the range
+ * @param {Number} numDays in the range (including both first & final dates)
+ * @returns {DateRange} object describing this range of dates
+ */
 function DateRange(firstDate, numDays) {
   this.firstDate = firstDate;
   this.numDays = numDays;
 }
 
+/**
+ * Unit test for DateRange.getFinalDate().
+ */
 function testDateRange_getFinalDate() {
   Logger.log('Testing DateRange.getFinalDate...');
   
@@ -40,6 +48,9 @@ DateRange.prototype.getFinalDate = function() {
   return result;
 }
 
+/**
+ * Unit test for DateRange.toString().
+ */
 function testDateRange_toString() {
   Logger.log('Testing DateRange.toString...');
   
@@ -53,12 +64,22 @@ function testDateRange_toString() {
     return false;
   }
       
+  if (!checkDateRange_toString('December', 
+                               new DateRange(parseDateString('2020-12-01'), 31))) {
+    return false;
+  }
+      
   Logger.log('Test passed.');
   return true;  
 }
 
-function checkDateRange_toString(expectedString,
-                                 dateRange) {
+/**
+ * Assert that DateRange.toString() returns the correct String.
+ *
+ * @param {String} expectedString that should be returned
+ * @param {String} dateRange to be described
+ */
+function checkDateRange_toString(expectedString, dateRange) {
   var dateRangeString = dateRange.toString();
   if (expectedString != dateRangeString) {
     Logger.log(Utilities.formatString('Wrong string value, expected %s, but got %s',
@@ -69,27 +90,47 @@ function checkDateRange_toString(expectedString,
   return true;
 }
 
+/**
+ * @returns {String} describing this date range, either:
+ *                   "M/d' through 'M/d"
+ *                   or, if it exactly spans a month, "MMMM"
+ *
+ * TODO This is more compact than "yyyy-MM-dd through yyyy-MM-dd" or "MMMM yyyy", 
+ *      but is the inconsistency & familiarity worth it?
+ */
 DateRange.prototype.toString = function() {
-  var finalDate = this.getFinalDate();
-  var lastMonthDate = new Date(this.firstDate.getTime());
-  lastMonthDate.setMonth(this.firstDate.getMonth()+1);
-  lastMonthDate.setDate(0);
   
+  // Find the final date of the month containing our first date.
+  // Note: Months are 0..11, but days are 1..31,
+  // However, the Date "constructor" supports passing 0 in date,
+  // which returns the final date of the previous month.
+  // You can also pass 12 in month to refer to January of the following year,
+  // which for date 0 would return 31 December of this year.
+  var finalDateOfMonth = new Date(this.firstDate.getFullYear(),
+                                  this.firstDate.getMonth()+1,
+                                  0);
+  
+  // If we span a month exactly, just return the name of that month.
   if  (   (this.firstDate.getDate() == 1)
-      &&  (finalDate.getTime() == lastMonthDate.getTime())) {
+      &&  (this.getFinalDate().getTime() == finalDateOfMonth.getTime())) {
       return Utilities.formatDate(this.firstDate,
                                   SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
                                   'MMMM');
   }
+  
+  // Otherwise, return a String in "M/d' through 'M/d" format.
   return Utilities.formatString('%s through %s',
                                 Utilities.formatDate(this.firstDate,
                                                      SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
                                                      'M/d'),
-                                Utilities.formatDate(finalDate,
+                                Utilities.formatDate(this.getFinalDate(),
                                                      SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
                                                      'M/d'));
 }
 
+/**
+ * Unit test for getPreviousMonthRange().
+ */
 function testGetPreviousMonthRange() {
   Logger.log('Testing checkGetPreviousMonthRange...');
   
@@ -105,11 +146,17 @@ function testGetPreviousMonthRange() {
   return true;  
 }
 
+/**
+ * Assert that getPreviousMonthRange() returns the correct range.
+ *
+ * @param {String} expectedFirstDateString of the DateRange returned
+ * @param {String} targetDateString in 'yyyy-MM-dd' format
+ */
 function checkGetPreviousMonthRange(expectedFirstDateString, targetDateString) {
   var targetDate = parseDateString(targetDateString);
   var expectedFirstDate = parseDateString(expectedFirstDateString);
-  var expectedLastDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0);
-  var expectedRange = new DateRange(expectedFirstDate, expectedLastDate.getDate());
+  var expectedFinalDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0);
+  var expectedRange = new DateRange(expectedFirstDate, expectedFinalDate.getDate());
   var range = getPreviousMonthRange(targetDate);
   if (expectedRange.toString() != range.toString()) {
     Logger.log(Utilities.formatString('Wrong previous month date range for %s, expected %s, but got %s',
@@ -121,22 +168,33 @@ function checkGetPreviousMonthRange(expectedFirstDateString, targetDateString) {
   return true;
 }
 
+/**
+ * @param {Date} targetDate within the target month (any such date)
+ * @returns {DateRange} covering the month preceding the target month
+ */
 function getPreviousMonthRange(targetDate) {
   var previousMonth = targetDate.getMonth() - 1;
   var previousYear = targetDate.getFullYear();
   if (targetDate.getMonth < 1) {
-    previousMonth = 11;
+    previousMonth = 11; // December
     previousYear--;
   }
-  var previousMonthLastDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0);
+  
+  // Note: Months are 0..11, but days are 1..31,
+  // However, the Date "constructor" supports passing 0 in date,
+  // which returns the final date of the previous month.
+  var previousMonthFinalDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0);
   var previousMonthFirstDate = 
     parseDateString(Utilities.formatString("%s-%s-%s", 
                                            previousYear, 
-                                           previousMonth+1,
-                                           1));
-  return new DateRange(previousMonthFirstDate, previousMonthLastDate.getDate());  
+                                           previousMonth+1, // Month is 0..11
+                                           1)); // Date is 1..31
+  return new DateRange(previousMonthFirstDate, previousMonthFinalDate.getDate());  
 }
 
+/**
+ * Unit test for parseDateString(), as well as some Date "constructor" tests.
+ */
 function testParseDateString() {
   Logger.log('Testing parseDateString...');
   
@@ -144,24 +202,36 @@ function testParseDateString() {
     return false;
   }
   
-  // This is also verifying some support in the Date constructor,
-  // first for finding last day of month using &date=0, where it
+  // Let's also validate some strange support in the Date "constructor":
+  
+  // First for finding last day of month using date=0, where it
   // normally ranges from 1..31.
   if (!checkParseDateString(new Date(2020,10,0), '2020-10-31')) {
     return false;
   }
   
-  // It should also work if it takes us across a year boundary.
+  // That should also work if it takes us across a year boundary.
   if (!checkParseDateString(new Date(2021,0,0), '2020-12-31')) {
     return false;
   }
   
-  // Note that we don't try passing -1 or 12 in month.
+  // That should even work if we pass month=12, where it normally ranges from 0..11.
+  if (!checkParseDateString(new Date(2020,12,0), '2020-12-31')) {
+    return false;
+  }
+  
+  // Note that we don't try passing -1month.
   
   Logger.log('Test passed.');
   return true;  
 }
 
+/**
+ * Assert that parseDateString() parses <code>dateString</code> correctly.
+ *
+ * @param {Date} expectedDate to be returned
+ * @param {String} dateString in 'yyyy-MM-dd' format
+ */
 function checkParseDateString(expectedDate, dateString) {
   date = parseDateString(dateString);
   if (expectedDate.getTime() != date.getTime()) {
@@ -173,6 +243,13 @@ function checkParseDateString(expectedDate, dateString) {
   return true;
 }
 
+/**
+ * @param {String} dateString in 'yyyy-MM-dd' format
+ * @returns {Date} matching <code>dateString</code>
+ *
+ * TODO Should this also parse other date formats
+ *      (at least what comes back from the Teamwork submission Form?)
+ */
 function parseDateString(dateString) {
   var fields = dateString.split('-');
   var year = fields[0];
@@ -182,6 +259,9 @@ function parseDateString(dateString) {
   return new Date(year, month-1, day);
 }
 
+/**
+ * Unit test for makeDateString().
+ */
 function testMakeDateString() {
   Logger.log('Testing makeDateString...');
   
@@ -200,9 +280,12 @@ function testMakeDateString() {
   return true;  
 }
 
+/**
+ * @param {Date} date to be represented
+ * @returns {String} 'yyyy-MM-dd' represention of <code>date</code>
+ */
 function makeDateString(date) {
   return Utilities.formatDate(date, 
                               SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 
                               'yyyy-MM-dd');
-  
 }
