@@ -18,9 +18,6 @@ function sendMonthlyPlayerSummaries() {
   var targetDateRange = getPreviousMonthRange(now);
   var otherDateRange = getPreviousMonthRange(targetDateRange.getFirstDate());
   
-  // TODO Remove this hack to include late September Teamwork in the October summaries:
-  targetDateRange = new DateRange(parseDateString('2020-09-21'), 41);
-  
   // Get access to all range & values from the 'Points data' sheet
   var ss = SpreadsheetApp.getActive();
   var pointsDataSheet = ss.getSheetByName('Points data');
