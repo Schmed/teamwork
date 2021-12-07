@@ -30,6 +30,9 @@ A confirmation or failure email is also sent to the player.
 # Teamwork sheet
 This sheet contains one row automatically added by each form submission,
 and then validated and augmented by the onFormSubmit() function.
+Here's a Sample Teamwork DB containing the Teamwork and other sheets 
+(plus a Sample Google Apps Script):
+https://docs.google.com/spreadsheets/d/1vHSYvnnlqoL3YGjmkHvR6dMy5l8u7Lb84nXzM-Aufd0/edit?usp=sharing
 There are currently 10 columns:
 * **Timestamp** - of the form submission
 * **Email** - address uniquely identifying the player, to which the confirmation/failure email is sent
